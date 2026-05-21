@@ -49,9 +49,9 @@
 
 | Provider         | Auth Type     | OAuth | Models                                                                          |
 | ---------------- | ------------- | ----- | ------------------------------------------------------------------------------- |
-| DeepSeek         | User Token    | Yes   | DeepSeek-V3.2                                                                   |
+| DeepSeek         | User Token    | Yes   | DeepSeek V4 Pro, DeepSeek V4 Flash, DeepSeek-V3.2, DeepSeek-R1                 |
 | GLM              | Refresh Token | Yes   | GLM-5                                                                           |
-| Kimi             | JWT Token     | Yes   | kimi-k2.5                                                                       |
+| Kimi             | Cookie/Auth   | Yes   | Kimi-K2.6, Kimi-K2.5                                                            |
 | MiniMax          | JWT Token     | Yes   | MiniMax-M2.5                                                                    |
 | 🆕 Perplexity    | JWT Token     | Yes   | Sonar, Sonar Pro, Sonar Deep Research                                           |
 | Qwen (CN)        | SSO Ticket    | Yes   | Qwen3.5-Plus, Qwen3-Max, Qwen3-Flash, Qwen3-Coder, qwen-max-latest              |
@@ -62,7 +62,7 @@
 
 ### Download
 
-Download the latest release from [GitHub Releases](https://github.com/xiaoY233/Chat2API/releases):
+Download the latest release from [GitHub Releases](https://github.com/CYoJkoY/Chat2API/releases):
 
 | Platform              | Download                                |
 | --------------------- | --------------------------------------- |
@@ -81,7 +81,7 @@ Download the latest release from [GitHub Releases](https://github.com/xiaoY233/C
 
 ```bash
 # Clone the repository
-git clone https://github.com/xiaoY233/Chat2API.git
+git clone https://github.com/CYoJkoY/Chat2API.git
 cd Chat2API
 
 # Install dependencies
@@ -239,7 +239,7 @@ sudo xattr -rd com.apple.quarantine "/Applications/Chat2API.app"
 
 ### How to update?
 
-Check for updates in the **About** page, or download the latest version from [GitHub Releases](https://github.com/xiaoY233/Chat2API/releases).
+Check for updates in the **About** page, or download the latest version from [GitHub Releases](https://github.com/CYoJkoY/Chat2API/releases).
 
 ## 🤝 Contributing
 
