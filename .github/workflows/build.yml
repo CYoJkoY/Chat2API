@@ -1,0 +1,44 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'           # 推送 v1.0.0 这类 tag 时触发
+  workflow_dispatch:    # 允许手动触发
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build & Package
+        env:
+          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+        run: pnpm run build:${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'macos-latest' && 'mac' || 'win' }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-package
+          path: dist/*.{exe,dmg,AppImage,snap,deb,rpm}
