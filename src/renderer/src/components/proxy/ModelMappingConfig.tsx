@@ -328,9 +328,11 @@ export function ModelMappingConfig({ onConfigChange }: ModelMappingConfigProps) 
     }
   }
 
-  const filteredAccounts = formData.preferredProviderId
-    ? accounts.filter(a => a.providerId === formData.preferredProviderId)
-    : accounts
+  const selectedProviderId = formData.preferredProviderId === AUTO_SELECT_VALUE ? '' : formData.preferredProviderId
+
+  const filteredAccounts = selectedProviderId
+    ? accounts.filter(a => a.providerId === selectedProviderId)
+    : []
 
   const isWildcard = formData.requestModel.includes('*')
 
@@ -354,8 +356,52 @@ export function ModelMappingConfig({ onConfigChange }: ModelMappingConfigProps) 
     return options.sort((a, b) => a.value.localeCompare(b.value))
   }, [providers])
 
+  const modelMatchedProviders = useMemo(() => {
+    if (!formData.actualModel.trim()) {
+      return providers
+    }
+
+    return providers.filter(provider =>
+      provider.supportedModels?.includes(formData.actualModel)
+    )
+  }, [formData.actualModel, providers])
+
+  const providerOptions = formData.actualModel.trim() ? modelMatchedProviders : providers
+
+  useEffect(() => {
+    if (
+      !formData.preferredProviderId ||
+      formData.preferredProviderId === AUTO_SELECT_VALUE ||
+      providerOptions.some(provider => provider.id === formData.preferredProviderId)
+    ) {
+      return
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      preferredProviderId: '',
+      preferredAccountId: '',
+    }))
+  }, [formData.preferredProviderId, providerOptions])
+
   const handleModelChange = (value: string) => {
-    setFormData(prev => ({ ...prev, actualModel: value }))
+    const nextProviders = value.trim()
+      ? providers.filter(provider => provider.supportedModels?.includes(value))
+      : providers
+
+    setFormData(prev => {
+      const canKeepProvider =
+        !prev.preferredProviderId ||
+        prev.preferredProviderId === AUTO_SELECT_VALUE ||
+        nextProviders.some(provider => provider.id === prev.preferredProviderId)
+
+      return {
+        ...prev,
+        actualModel: value,
+        preferredProviderId: canKeepProvider ? prev.preferredProviderId : '',
+        preferredAccountId: canKeepProvider ? prev.preferredAccountId : '',
+      }
+    })
   }
 
   return (
@@ -376,6 +422,37 @@ export function ModelMappingConfig({ onConfigChange }: ModelMappingConfigProps) 
         <CardDescription>{t('proxy.modelMappingDesc')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {hasChanges && (
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-4 rounded-lg border border-amber-500/20">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-sm">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <span className="text-amber-700 dark:text-amber-400 font-medium">{t('proxy.unsavedChangesHint')}</span>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReset}
+                  disabled={isLoading}
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  {t('common.reset')}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSaveAll}
+                  disabled={isLoading}
+                  className="bg-amber-600 hover:bg-amber-700"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {isLoading ? t('providers.saving') : t('proxy.saveConfig')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -519,37 +596,6 @@ export function ModelMappingConfig({ onConfigChange }: ModelMappingConfigProps) 
         </div>
       </CardContent>
 
-      {hasChanges && (
-        <div className="border-t bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-4 rounded-b-[16px]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <span className="text-amber-700 dark:text-amber-400 font-medium">{t('proxy.unsavedChangesHint')}</span>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleReset}
-                disabled={isLoading}
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                {t('common.reset')}
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSaveAll}
-                disabled={isLoading}
-                className="bg-amber-600 hover:bg-amber-700"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {isLoading ? t('providers.saving') : t('proxy.saveConfig')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -612,7 +658,7 @@ export function ModelMappingConfig({ onConfigChange }: ModelMappingConfigProps) 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={AUTO_SELECT_VALUE}>{t('proxy.autoSelect')}</SelectItem>
-                  {providers.map((provider) => (
+                  {providerOptions.map((provider) => (
                     <SelectItem key={provider.id} value={provider.id}>
                       {provider.name}
                     </SelectItem>
@@ -626,10 +672,10 @@ export function ModelMappingConfig({ onConfigChange }: ModelMappingConfigProps) 
               <Select
                 value={formData.preferredAccountId}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, preferredAccountId: value }))}
-                disabled={!formData.preferredProviderId}
+                disabled={!selectedProviderId}
               >
                 <SelectTrigger id="account">
-                  <SelectValue placeholder={formData.preferredProviderId ? t('proxy.autoSelect') : t('proxy.selectProviderFirst')} />
+                  <SelectValue placeholder={selectedProviderId ? t('proxy.autoSelect') : t('proxy.selectProviderFirst')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={AUTO_SELECT_VALUE}>{t('proxy.autoSelect')}</SelectItem>

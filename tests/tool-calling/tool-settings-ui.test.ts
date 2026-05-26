@@ -54,6 +54,22 @@ test('model mapping UI protects built-in mappings and confirms restore defaults'
   assert.match(panel, /whitespace-nowrap/)
 })
 
+test('model mapping UI keeps save controls above the mapping list', () => {
+  const panel = readFileSync('src/renderer/src/components/proxy/ModelMappingConfig.tsx', 'utf8')
+
+  assert.match(panel, /proxy\.saveConfig[\s\S]*proxy\.searchMappings/)
+})
+
+test('model mapping provider choices are filtered by selected actual model', () => {
+  const panel = readFileSync('src/renderer/src/components/proxy/ModelMappingConfig.tsx', 'utf8')
+
+  assert.match(panel, /modelMatchedProviders/)
+  assert.match(panel, /provider\.supportedModels\?\.includes\(formData\.actualModel\)/)
+  assert.match(panel, /providerOptions\.map/)
+  assert.match(panel, /preferredProviderId: ''/)
+  assert.match(panel, /preferredAccountId: ''/)
+})
+
 test('dashboard chart avoids the broken recharts dependency path', () => {
   const chart = readFileSync('src/renderer/src/components/dashboard/RequestChart.tsx', 'utf8')
 
